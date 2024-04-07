@@ -26,16 +26,21 @@
           </template>
         </el-table-column>
         <el-table-column prop="locationName" label="塔吊位置"></el-table-column>
+        <el-table-column prop="company" label="承包公司"></el-table-column>
+        <el-table-column prop="principalName" label="负责人"></el-table-column>
+        <el-table-column prop="principalPhone" label="负责人手机号"></el-table-column>
         <el-table-column prop="deviceName" label="关联设备名称"></el-table-column>
         <el-table-column label="操作" width="200" align="center">
           <template slot-scope="scope">
+            <el-button @click="showCraneData(scope.row)">实时数据</el-button>
+            <el-button @click="locateOnMap">跳转到地图</el-button>
             <el-button v-show="roleId==='1'" size="small" type="primary" @click="edit(scope.row)">编辑<i class="el-icon-edit"></i></el-button>
-            <el-button @click="showCraneData(scope.row)">塔吊数据</el-button>
             <el-button v-show="roleId==='1'" size="small" type="danger" @click="del(scope.row.id)">删除<i class="el-icon-remove-outline"></i>
             </el-button>
           </template>
         </el-table-column>
       </el-table>
+
       <div style="padding: 10px 0">
         <el-pagination
             @size-change="handleSizeChange"
@@ -54,6 +59,15 @@
           </el-form-item>
           <el-form-item label="塔吊地址">
             <el-input v-model="form.locationName" autocomplete="off"></el-input>
+          </el-form-item>
+          <el-form-item label="承包公司">
+            <el-input v-model="form.company" autocomplete="off"></el-input>
+          </el-form-item>
+          <el-form-item label="负责人姓名">
+            <el-input v-model="form.principalName" autocomplete="off"></el-input>
+          </el-form-item>
+          <el-form-item label="负责人手机号">
+            <el-input v-model="form.principalPhone" autocomplete="off"></el-input>
           </el-form-item>
           <el-form-item label="关联设备">
             <el-select v-model="form.equipmentId" placeholder="请选择关联设备" clearable @clear="clearEquipment">
@@ -85,15 +99,15 @@
           <el-button type="primary" @click="saveOrUpdate">确定</el-button>
         </div>
       </el-dialog>
-      <el-dialog title="塔吊实时数据" :visible.sync="dialogDataVisible">
-        <el-table :data="detail" stripe style="width: 100%">
+      <el-dialog title="塔吊实时数据" :visible.sync="dialogDataVisible" @close="handleDialogClose">
+        <el-table :data="detail" stripe style="width: 100%" :cell-style="cellStyle">
           <!--        <el-table-column prop="id" label="ID" width="180"></el-table-column>-->
           <el-table-column prop="temporary" label="温度/摄氏度°" width="180"></el-table-column>
           <el-table-column prop="weight" label="重量/吨"></el-table-column>
           <el-table-column prop="winSpeed" label="风速KM/H"></el-table-column>
           <el-table-column prop="distance" label="距离/M"></el-table-column>
           <el-table-column prop="angle" label="角度/°"></el-table-column>
-          <el-table-column prop="gmtCreate" label="数据上报时间" :formatter="formatDate"></el-table-column>
+<!--          <el-table-column prop="gmtCreate" label="数据上报时间" :formatter="formatDate"></el-table-column>-->
         </el-table>
       </el-dialog>
     </el-main>
@@ -138,10 +152,11 @@ export default {
       headerBg: 'headerBg',
       dialogFormVisible: false,
       dialogDataVisible: false,
-      uuid:"",
+      mapVisible: false,
+      uuid: "",
       defaultFileList: [], // 用于回显图片的数组
-      equipmentList:[],
-      roleId:"",
+      equipmentList: [],
+      roleId: "",
       isSidebarOpen: false,
       detail:[]
     }
@@ -153,20 +168,38 @@ export default {
     console.log(this.roleId)
   },
   methods: {
-    fetchEquipmentList(){
+    fetchEquipmentList() {
       request.get("/crane/equipment/listAllEquipment")
-          .then(response=>{
-        this.equipmentList=response.data
-      })
+          .then(response => {
+            this.equipmentList = response.data
+          })
+    },
+    cellStyle({row, column, rowIndex, columnIndex}) {
+      if (rowIndex === 0 && columnIndex === 0 && row.temporary > 40) {
+        return 'color:red;';
+      } else if (rowIndex === 0 && columnIndex === 1 && row.weight > 2500) {
+        return 'color:red;';
+      } else if (rowIndex === 0 && columnIndex === 2 && row.winSpeed > 12) {
+        return 'color:red;';
+      }
+      // else if (rowIndex === 0 && columnIndex === 3 && row.distance > 200) {
+      //   return 'color:red;';
+      // } else if (rowIndex === 0 && columnIndex === 4 && row.angle > 0) {
+      //   return 'color:red;';
+      // }
     },
     showCraneData(row) {
       this.dialogDataVisible = true; // 显示对话框
-
-      request.get("/crane/data/getById?id="+row.id).then(
-          response=>{
-            this.detail=response.data
-          }
-      )
+      const fetchData = () => {
+        request.get("/crane/data/getById?id=" + row.id).then(response => {
+          this.detail = response.data;
+        });
+      };
+      fetchData();
+      this.refreshInterval = setInterval(fetchData, 1000);
+    },
+    handleDialogClose() {
+      clearInterval(this.refreshInterval);
     },
     // 新增或编辑按钮点击事件
     addOrUpdate() {
@@ -192,7 +225,7 @@ export default {
       this.form.imageUrl = '';
     },
     beforeUpload(file) {
-      const isJPG = (file.type === 'image/jpeg'||file.type ==='image/png');
+      const isJPG = (file.type === 'image/jpeg' || file.type === 'image/png');
       const isLt2M = file.size / 1024 / 1024 < 5;
       if (!isJPG) {
         this.$message.error('上传头像图片只能是 JPG 格式!');
@@ -205,8 +238,8 @@ export default {
       return isJPG && isLt2M;
     },
     handleUploadSuccess(res) {
-      this.uuid=res.data
-      this.form.imgUid=this.uuid
+      this.uuid = res.data
+      this.form.imgUid = this.uuid
     },
     getImageUrl(uid) {
       return `http://localhost:8081/common/getImg/${uid}`
@@ -224,13 +257,20 @@ export default {
     },
     edit(row) {
       if (row.imgUid) {
-        this.defaultFileList = [{name: 'image', url: 'http://localhost:8081/common/getImg/'+row.imgUid}];
+        this.defaultFileList = [{name: 'image', url: 'http://localhost:8081/common/getImg/' + row.imgUid}];
       } else {
-        this.defaultFileList =[{}]
+        this.defaultFileList = [{}]
       }
       this.form = row;
       // 将设备ID改为设备名称
-      this.form.equipmentId = row.deviceName;
+      // this.form.equipmentId = row.deviceName;
+      const deviceName = row.deviceName;
+      // 根据设备名称找到对应的设备ID
+      const equipment = this.equipmentList.find(item => item.deviceName === deviceName);
+      if (equipment) {
+        // 如果找到了对应的设备ID，则将其赋值给表单的equipmentId字段
+        this.form.equipmentId = equipment.id;
+      }
       this.editMode = true
       this.dialogFormVisible = true
     },
@@ -240,12 +280,13 @@ export default {
     },
     save() {
       request.post("/crane/info/insert", this.form).then(res => {
-        if (res) {
-          this.$message.success("保存成功")
-          this.dialogFormVisible = false
-          this.load()
+        if (res.code === 200) {
+          this.$message.success("保存成功");
+          this.dialogFormVisible = false;
+          this.load();
         } else {
-          this.$message.error("保存失败")
+          this.$message.error(res.msg);
+          this.load();
         }
       })
     },

@@ -107,6 +107,19 @@ export default {
       this.pageNum = pageNum
       this.load()
     },
+    // cellStyle({row, column, rowIndex, columnIndex}) {
+    //   if (rowIndex === 0 && columnIndex === 0 && row.temporary > 10) {
+    //     return 'color:red;';
+    //   } else if (rowIndex === 0 && columnIndex === 1 && row.weight > 600) {
+    //     return 'color:red;';
+    //   } else if (rowIndex === 0 && columnIndex === 2 && row.winSpeed > 20) {
+    //     return 'color:red;';
+    //   } else if (rowIndex === 0 && columnIndex === 3 && row.distance > 200) {
+    //     return 'color:red;';
+    //   } else if (rowIndex === 0 && columnIndex === 4 && row.angle > 0) {
+    //     return 'color:red;';
+    //   }
+    // },
   }
 
 }

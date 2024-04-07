@@ -23,10 +23,8 @@ const routes = [
             },
             {
                 path: '/permissions', name: 'permissions', component: () => import('../views/EL/permissions.vue')
-            },
-            {
-                path: '/OutArchives', name: 'OutArchives', component: () => import('../views/EL/OutArchives.vue')
             }
+
         ]
     },
     {
