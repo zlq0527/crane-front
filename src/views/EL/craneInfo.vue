@@ -33,13 +33,22 @@
         <el-table-column label="操作" width="200" align="center">
           <template slot-scope="scope">
             <el-button @click="showCraneData(scope.row)">实时数据</el-button>
-            <el-button @click="locateOnMap">跳转到地图</el-button>
+            <el-button @click="locateOnMap(scope.row)">跳转到地图</el-button>
             <el-button v-show="roleId==='1'" size="small" type="primary" @click="edit(scope.row)">编辑<i class="el-icon-edit"></i></el-button>
             <el-button v-show="roleId==='1'" size="small" type="danger" @click="del(scope.row.id)">删除<i class="el-icon-remove-outline"></i>
             </el-button>
           </template>
         </el-table-column>
       </el-table>
+
+      <el-dialog title="地图定位" :visible.sync="mapVisible" width="80%" center>
+        <div style="height: 500px;">
+          <div id="mapContainer" style="width: 100%; height: 100%;"></div>
+        </div>
+        <div slot="footer" class="dialog-footer">
+          <el-button @click="mapVisible = false">取消</el-button>
+        </div>
+      </el-dialog>
 
       <div style="padding: 10px 0">
         <el-pagination
@@ -157,7 +166,6 @@ export default {
       defaultFileList: [], // 用于回显图片的数组
       equipmentList: [],
       roleId: "",
-      isSidebarOpen: false,
       detail:[]
     }
   },
@@ -166,6 +174,19 @@ export default {
     this.fetchEquipmentList()
     this.roleId = localStorage.getItem("roleId");
     console.log(this.roleId)
+  },
+  //钩子函数，它在组件被挂载到 DOM 之后调用
+  mounted() {
+      // 创建地图实例
+      const map = new BMap.Map(this.$refs.mapContainer);
+      // 设置地图中心点和缩放级别
+      const point = new BMap.Point(116.404, 39.915);
+      map.centerAndZoom(point, 15);
+      // 添加一些控件
+      map.addControl(new BMap.NavigationControl());
+      map.addControl(new BMap.ScaleControl());
+      map.addControl(new BMap.OverviewMapControl());
+      map.addControl(new BMap.MapTypeControl());
   },
   methods: {
     fetchEquipmentList() {
@@ -187,6 +208,25 @@ export default {
       // } else if (rowIndex === 0 && columnIndex === 4 && row.angle > 0) {
       //   return 'color:red;';
       // }
+    },
+    locateOnMap(row) {
+      // 获取位置名称
+      const locationName = row.locationName;
+      // 创建地图对象
+      const map = new BMap.Map("mapContainer");
+      // 创建地址解析器实例
+      const geoc = new BMap.Geocoder();
+      // 将地址解析结果显示在地图上，并调整地图视野
+      geoc.getPoint(locationName, function(point) {
+        if (point) {
+          map.centerAndZoom(point, 16);
+          map.addOverlay(new BMap.Marker(point));
+        } else {
+          alert("您选择地址没有解析到结果！");
+        }
+      }, locationName);
+      // 显示弹窗
+      this.mapVisible = true;
     },
     showCraneData(row) {
       this.dialogDataVisible = true; // 显示对话框
