@@ -26,8 +26,8 @@
         <el-table-column label="操作" width="400" align="center">
           <template slot-scope="scope">
             <el-button size="small" type="primary" @click="detail(scope.row.craneDataId)">查看设备上报数据<i class="el-icon-edit"></i></el-button>
-            <el-button size="small" type="primary" @click="edit(scope.row)">编辑<i class="el-icon-edit"></i></el-button>
-            <el-button size="small" type="danger" @click="del(scope.row.id)">删除<i class="el-icon-remove-outline"></i>
+            <el-button v-show="roleId==='1'" size="small" type="primary" @click="edit(scope.row)">编辑<i class="el-icon-edit"></i></el-button>
+            <el-button v-show="roleId==='1'" size="small" type="danger" @click="del(scope.row.id)">删除<i class="el-icon-remove-outline"></i>
             </el-button>
           </template>
         </el-table-column>
@@ -103,10 +103,12 @@ export default {
       logoTextShow: true,
       headerBg: 'headerBg',
       dialogFormVisible: false,
+      roleId:""
     }
   },
   created() {
     this.load()
+    this.roleId = localStorage.getItem("roleId");
   },
   methods: {
     // 新增或编辑按钮点击事件
