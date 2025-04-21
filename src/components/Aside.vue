@@ -125,6 +125,12 @@
               </template>
             </el-submenu>
             
+            <el-menu-item index="/dataCenter">
+              <template slot="title">
+                <i class="el-icon-data-analysis"></i>
+                <span>数据中心</span>
+              </template>
+            </el-menu-item>
           </el-menu>
 </template>
 

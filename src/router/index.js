@@ -23,8 +23,10 @@ const routes = [
             },
             {
                 path: '/permissions', name: 'permissions', component: () => import('../views/EL/permissions.vue')
+            },
+            {
+                path: '/dataCenter', name: 'dataCenter', component: () => import('../views/EL/dataCenter.vue')
             }
-
         ]
     },
     {
@@ -37,6 +39,11 @@ const routes = [
         alias: '/login',
         name: 'Login',
         component: () => import('../views/login.vue')
+    },
+    {
+        path: "/dataCenter",
+        name: 'DataCenterMain', 
+        component: () => import('../views/EL/dataCenter.vue')
     }
 ]
 
