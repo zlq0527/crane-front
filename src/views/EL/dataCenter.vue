@@ -406,19 +406,19 @@ export default {
     // 判断载重是否正常
     isWeightNormal() {
       const weight = this.craneData.weight || 0;
-      return weight <= 10000;
+      return weight <= 2500;
     },
     
     // 判断风速是否正常
     isWindSpeedNormal() {
       const windSpeed = this.craneData.winSpeed || 0;
-      return windSpeed <= 20;
+      return windSpeed <= 12;
     },
     
     // 判断温度是否正常
     isTemperatureNormal() {
       const temp = parseFloat(this.craneData.temporary) || 0;
-      return temp <= 50 && temp >= 0;
+      return temp <= 40 && temp >= 0;
     },
     
     // 跳转到系统
